@@ -314,36 +314,42 @@ This project was developed as part of the **React Native Developer Assignment** 
 ### 📋 **Assignment Requirements Compliance**
 
 #### ✅ **Authentication**
+
 - **Google Login**: Implemented with expo-auth-session (configuration ready)
 - **Cross-platform**: Works seamlessly on iOS, Android, and Web
 - **Profile Display**: User profile picture and name displayed in gallery header
 - **Session Management**: Persistent authentication with Supabase
 
 #### ✅ **Image Gallery**
+
 - **Native Image Picker**: Camera and gallery support on all platforms
 - **Grid Layout**: Responsive image gallery with captions
 - **Cross-platform Media**: Consistent experience across iOS, Android, Web
 - **Real-time Updates**: Live gallery updates without refresh
 
 #### ✅ **Voice Captions**
+
 - **Voice Input**: Web Speech API for web, simulation for mobile
 - **Text Fallback**: Manual text input always available
 - **Cross-platform**: Voice features work on iOS, Android, and Web
 - **Text-to-Speech**: Caption playback using expo-speech
 
 #### ✅ **Data Persistence**
+
 - **Local Storage**: AsyncStorage for offline functionality
 - **Cloud Sync**: Supabase backend integration
 - **Hybrid Approach**: Local-first with cloud backup
 - **Offline Support**: Full functionality without internet
 
 #### ✅ **Sharing & Cross-platform**
+
 - **Native Share**: Platform-specific sharing (expo-sharing)
 - **Web Compatibility**: Navigator.share API with clipboard fallback
 - **Caption Sharing**: Share images with captions
 - **Universal Support**: Works on mobile and web platforms
 
 #### ✅ **UI & UX**
+
 - **Modern Design**: Clean, minimal interface with smooth animations
 - **Responsive Layout**: Adapts to all screen sizes and orientations
 - **React Navigation**: Smooth tab and stack navigation
@@ -352,6 +358,7 @@ This project was developed as part of the **React Native Developer Assignment** 
 ### 🏗️ **Design Choices**
 
 #### **Technology Stack**
+
 - **React Native + Expo**: Chosen for true cross-platform development with native performance
 - **TypeScript**: Ensures type safety and better developer experience
 - **Supabase**: Provides authentication, database, and storage in one platform
@@ -359,12 +366,14 @@ This project was developed as part of the **React Native Developer Assignment** 
 - **expo-sharing**: Platform-specific sharing capabilities
 
 #### **Architecture Decisions**
+
 - **Hybrid Storage**: Local-first approach ensures offline functionality with cloud backup
 - **Component Modularity**: Reusable components for better maintainability
 - **Theme System**: Centralized theming for consistent UI across light/dark modes
 - **Responsive Design**: Flexible layouts that work on phones, tablets, and web
 
 #### **UI/UX Philosophy**
+
 - **User-First**: Prioritized ease of use and intuitive navigation
 - **Performance**: 60fps animations and optimized image loading
 - **Accessibility**: Proper contrast ratios and touch targets
@@ -373,18 +382,21 @@ This project was developed as part of the **React Native Developer Assignment** 
 ### ⚖️ **Trade-offs & Limitations**
 
 #### **Current Trade-offs**
+
 - **Voice Input**: Mobile uses simulation instead of real speech recognition (can be upgraded with @react-native-voice/voice)
 - **Google OAuth**: Requires manual setup of OAuth client IDs for production use
 - **File Size**: Large images may impact performance on older devices
 - **Network Dependency**: Some features require internet for cloud sync
 
 #### **Technical Limitations**
+
 - **Platform Differences**: iOS and Android have slight variations in image picker behavior
 - **Web Constraints**: Browser limitations for certain native features
 - **Storage Limits**: Local storage constraints on mobile devices
 - **Supabase Quotas**: Free tier limitations for storage and API calls
 
 #### **Known Issues**
+
 - Large image uploads may timeout on slow connections
 - iOS simulator performance may differ from real device
 - Voice input simulation could be replaced with real implementation
@@ -394,23 +406,27 @@ This project was developed as part of the **React Native Developer Assignment** 
 Beyond the assignment requirements, this app includes several bonus features:
 
 #### ✅ **Advanced Organization**
+
 - **Folder System**: Create custom folders with names, colors, and icons
 - **Drag & Drop**: Move photos between folders effortlessly
 - **Smart Filtering**: Filter by folder or show unorganized photos
 
 #### ✅ **Enhanced User Experience**
+
 - **Dark Mode Toggle**: Complete light/dark theme switching
 - **Search Functionality**: Find photos by captions instantly
 - **Full-Screen Viewer**: Immersive photo viewing with zoom
 - **Smooth Animations**: Professional-grade transitions and feedback
 
 #### ✅ **Robust Storage System**
+
 - **Offline Support**: Full functionality without internet connection
 - **Cloud Backup**: Automatic synchronization with Supabase
 - **Recycle Bin**: Restore accidentally deleted photos
 - **Data Recovery**: Backup and restore functionality
 
 #### ✅ **Production Features**
+
 - **Environment Configuration**: Separate dev/prod configurations
 - **Error Handling**: Comprehensive error management
 - **Security**: Secure API key management and data encryption
@@ -425,8 +441,9 @@ Beyond the assignment requirements, this app includes several bonus features:
 ### 📱 **Platform Testing**
 
 This app has been tested and verified on:
+
 - ✅ **iOS**: iPhone simulators and real devices
-- ✅ **Android**: Android emulators and real devices  
+- ✅ **Android**: Android emulators and real devices
 - ✅ **Web**: Chrome, Safari, Firefox browsers
 - ✅ **Responsive**: Various screen sizes and orientations
 
