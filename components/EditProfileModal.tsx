@@ -115,7 +115,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -133,7 +133,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
   const openImagePicker = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -162,15 +162,26 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
       // Upload profile image to Supabase Storage if a new image was selected
       if (avatarUri && avatarUri.startsWith('file://')) {
         try {
-          const response = await fetch(avatarUri);
-          const blob = await response.blob();
+          let fileData;
+          
+          if (Platform.OS === 'web') {
+            // Web platform - use blob
+            const response = await fetch(avatarUri);
+            fileData = await response.blob();
+          } else {
+            // Mobile platforms - use FileSystem to read as arrayBuffer
+            const response = await fetch(avatarUri);
+            const arrayBuffer = await response.arrayBuffer();
+            fileData = new Uint8Array(arrayBuffer);
+          }
+          
           const fileExt = 'jpg';
           const fileName = `${user.id}/profile.${fileExt}`;
 
           // Upload to Supabase Storage
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('profile-images')
-            .upload(fileName, blob, {
+            .upload(fileName, fileData, {
               cacheControl: '3600',
               upsert: true,
               contentType: 'image/jpeg'
