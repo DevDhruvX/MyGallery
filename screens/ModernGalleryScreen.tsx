@@ -203,31 +203,62 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
     const hasPermissions = await requestPermissions();
     if (!hasPermissions) return;
 
-    Alert.alert(
-      '📸 Add New Photo',
-      'How would you like to add a photo?',
-      [
-        { 
-          text: '📷 Camera', 
-          onPress: () => pickImageFromCamera(),
-          style: 'default'
-        },
-        { 
-          text: '🖼️ Gallery', 
-          onPress: () => pickImageFromGallery(),
-          style: 'default'
-        },
-        { 
-          text: 'Cancel', 
-          style: 'cancel' 
-        },
-      ],
-      { cancelable: true }
-    );
+    if (Platform.OS === 'web') {
+      // On web, only offer gallery option since camera is usually not available
+      Alert.alert(
+        '📸 Add New Photo',
+        'Select an image from your computer',
+        [
+          { 
+            text: '🖼️ Choose File', 
+            onPress: () => pickImageFromGallery(),
+            style: 'default'
+          },
+          { 
+            text: 'Cancel', 
+            style: 'cancel' 
+          },
+        ],
+        { cancelable: true }
+      );
+    } else {
+      // Mobile platforms - offer both camera and gallery
+      Alert.alert(
+        '📸 Add New Photo',
+        'How would you like to add a photo?',
+        [
+          { 
+            text: '📷 Camera', 
+            onPress: () => pickImageFromCamera(),
+            style: 'default'
+          },
+          { 
+            text: '🖼️ Gallery', 
+            onPress: () => pickImageFromGallery(),
+            style: 'default'
+          },
+          { 
+            text: 'Cancel', 
+            style: 'cancel' 
+          },
+        ],
+        { cancelable: true }
+      );
+    }
   };
 
   const pickImageFromCamera = async () => {
     try {
+      // Check if camera is available (not on web typically)
+      if (Platform.OS === 'web') {
+        Alert.alert(
+          'Camera Not Available',
+          'Camera access is not available on web. Please use Gallery option instead.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: 'images',
         allowsEditing: false, // Allow full image without cropping
@@ -249,6 +280,10 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
         mediaTypes: 'images',
         allowsEditing: false, // Allow full image without cropping
         quality: 0.8,
+        ...(Platform.OS === 'web' && {
+          // Web-specific options
+          allowsMultipleSelection: false,
+        }),
       });
 
       if (!result.canceled && result.assets[0]) {
@@ -596,11 +631,34 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
           text: 'Logout',
           onPress: async () => {
             try {
-              await supabase.auth.signOut();
-              Alert.alert('✅ Success', 'You have been logged out successfully');
+              console.log('Starting logout process...');
+              
+              // Clear any local state first
+              setGalleryItems([]);
+              setUser(null);
+              
+              // Sign out from Supabase
+              const { error } = await supabase.auth.signOut();
+              
+              if (error) {
+                console.error('Logout error:', error);
+                throw error;
+              }
+              
+              console.log('Logout successful');
+              
+              // For web, we might need to reload the page to ensure clean state
+              if (Platform.OS === 'web') {
+                // Small delay to ensure state is cleared
+                setTimeout(() => {
+                  window.location.reload();
+                }, 100);
+              } else {
+                Alert.alert('✅ Success', 'You have been logged out successfully');
+              }
             } catch (error) {
               console.error('Error signing out:', error);
-              Alert.alert('❌ Error', 'Failed to sign out');
+              Alert.alert('❌ Error', 'Failed to sign out. Please try again.');
             }
           },
         },
