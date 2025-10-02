@@ -1,7 +1,7 @@
 # MyGallery - Advanced Photo Organization App
 
 <div align="center">
-  <img src="./assets/images/icon.png" alt="MyGallery Logo" width="120" height="120">
+  <img src="./assets/images/icon.png?v=2.0" alt="MyGallery Logo" width="120" height="120">
   
   [![React Native](https://img.shields.io/badge/React%20Native-0.73-blue.svg)](https://reactnative.dev/)
   [![Expo](https://img.shields.io/badge/Expo-SDK%2050-black.svg)](https://expo.io/)
