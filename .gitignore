@@ -32,6 +32,15 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+.env.local
+.env.production
+.env.development
+
+# Sensitive configuration files
+supabaseConfig.ts.backup
+config.json
+secrets.json
 
 # typescript
 *.tsbuildinfo
