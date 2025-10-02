@@ -35,12 +35,14 @@ We take the security of MyGallery seriously. If you discover a security vulnerab
 ## Security Best Practices
 
 ### For Users
+
 - Keep your app updated to the latest version
 - Use strong passwords for your account
 - Enable two-factor authentication when available
 - Be cautious about granting app permissions
 
 ### For Developers
+
 - Follow secure coding practices
 - Regularly update dependencies
 - Use environment variables for sensitive data
