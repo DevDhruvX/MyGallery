@@ -5,19 +5,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Animated,
-    Dimensions,
-    FlatList,
-    Image,
-    Modal,
-    Platform,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CreateFolderModal from '../components/CreateFolderModal';
@@ -735,7 +735,7 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
         Start Your Gallery Journey
       </Text>
       <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
-        Capture memories, add voice captions, and{'\\n'}share your amazing moments with the world
+        Capture memories, add voice captions, and{'\n'}share your amazing moments with the world
       </Text>
       <TouchableOpacity 
         style={[styles.emptyButton, { backgroundColor: theme.primary }]}
