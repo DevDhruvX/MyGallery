@@ -13,7 +13,7 @@ export class BackupStorageService {
       // If user is logged in, sync with cloud
       if (userId) {
         try {
-          const cloudItems = await EnhancedSupabaseService.getActiveItems();
+          const cloudItems = await EnhancedSupabaseService.getActiveItems(userId);
           const convertedCloudItems: GalleryItem[] = cloudItems.map(item => ({
             id: item.id.toString(),
             imageUri: item.image_url,
@@ -43,7 +43,7 @@ export class BackupStorageService {
   // Load recycle bin items
   static async loadRecycleBinItems(userId: string): Promise<GalleryItem[]> {
     try {
-      const cloudItems = await EnhancedSupabaseService.getRecycleBinItems();
+      const cloudItems = await EnhancedSupabaseService.getRecycleBinItems(userId);
       return cloudItems.map(item => ({
         id: item.id.toString(),
         imageUri: item.image_url,
@@ -61,7 +61,7 @@ export class BackupStorageService {
   // Load all backup items (for full restore)
   static async loadAllBackupItems(userId: string): Promise<GalleryItem[]> {
     try {
-      const cloudItems = await EnhancedSupabaseService.getAllBackupItems();
+      const cloudItems = await EnhancedSupabaseService.getAllBackupItems(userId);
       return cloudItems.map(item => ({
         id: item.id.toString(),
         imageUri: item.image_url,
@@ -412,7 +412,7 @@ export class BackupStorageService {
     if (!userId) throw new Error('User ID required for cloud restore');
     
     try {
-      const cloudItems = await EnhancedSupabaseService.getActiveItems();
+      const cloudItems = await EnhancedSupabaseService.getActiveItems(userId);
       const convertedCloudItems: GalleryItem[] = cloudItems.map(item => ({
         id: item.id.toString(),
         imageUri: item.image_url,

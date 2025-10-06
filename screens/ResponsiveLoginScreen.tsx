@@ -94,12 +94,19 @@ const ResponsiveLoginScreen: React.FC = () => {
       console.log('🔵 Starting Google sign-in...');
       console.log('🔵 Platform:', Platform.OS);
       
-      // Use the same Supabase OAuth flow for both web and mobile
+      // Create proper redirect URI for the platform
+      const redirectUri = Platform.OS === 'web' 
+        ? window.location.origin 
+        : 'mygallery://auth/callback'; // This WAS working!
+      
+      console.log('🔵 Redirect URI:', redirectUri);
+      
+      // Use the proper redirect URI
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // Always use the Supabase callback URL - it works for both web and mobile
-          redirectTo: 'https://zjciguygyrnwceymvsfn.supabase.co/auth/v1/callback',
+          redirectTo: redirectUri,
+          skipBrowserRedirect: true, // Important for mobile
         },
       });
       
@@ -118,12 +125,9 @@ const ResponsiveLoginScreen: React.FC = () => {
         // For mobile, open the OAuth URL in browser
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
-          // Don't specify a redirect - let the browser handle the Supabase callback
-          undefined,
+          redirectUri, // Use the correct redirect URI - this was the missing piece!
           {
             showInRecents: true,
-            // This helps with the redirect back to the app
-            createTask: false,
           }
         );
         
@@ -131,19 +135,34 @@ const ResponsiveLoginScreen: React.FC = () => {
         
         // For mobile, the auth might complete even if result.type is 'cancel'
         // because the OAuth completes in the browser and then the app is notified
-        if (result.type === 'success' || result.type === 'cancel') {
-          console.log('🔵 Checking for session after mobile auth...');
+        if (result.type === 'success') {
+          console.log('🔵 Success URL:', result.url);
           
-          // Wait a bit for the auth to complete
-          setTimeout(async () => {
-            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-            if (sessionData.session) {
-              console.log('✅ Session found after mobile auth!');
-              // Session will be picked up by the auth state listener
-            } else {
-              console.log('⏳ No session yet - auth may still be processing...');
+          // Extract tokens from URL hash
+          const hashPart = result.url.split('#')[1];
+          if (hashPart) {
+            const params = new URLSearchParams(hashPart);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            
+            if (accessToken) {
+              try {
+                // Set the session with the tokens
+                await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken || ''
+                });
+                
+                console.log('✅ Session set successfully!');
+                Alert.alert('🎉 Success!', 'Logged in with Google successfully!');
+              } catch (sessionError) {
+                console.error('🔴 Session error:', sessionError);
+              }
             }
-          }, 1500);
+          }
+        } else if (result.type === 'cancel') {
+          console.log('❌ User cancelled Google auth');
+          return;
         }
       }
       

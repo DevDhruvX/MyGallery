@@ -15,12 +15,18 @@ export interface BackupGalleryItem {
 }
 
 export class EnhancedSupabaseService {
-  // Get active gallery items (not deleted locally)
-  static async getActiveItems(): Promise<BackupGalleryItem[]> {
+  // Get active gallery items (not deleted locally) for specific user
+  static async getActiveItems(userId?: string): Promise<BackupGalleryItem[]> {
     try {
+      if (!userId) {
+        console.log('No user ID provided, returning empty array');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('gallery_items')
         .select('*')
+        .eq('user_id', userId) // Filter by user ID
         .eq('is_deleted_locally', false)
         .order('created_at', { ascending: false });
 
@@ -32,12 +38,18 @@ export class EnhancedSupabaseService {
     }
   }
 
-  // Get recycle bin items (deleted locally but not permanently)
-  static async getRecycleBinItems(): Promise<BackupGalleryItem[]> {
+  // Get recycle bin items (deleted locally but not permanently) for specific user
+  static async getRecycleBinItems(userId?: string): Promise<BackupGalleryItem[]> {
     try {
+      if (!userId) {
+        console.log('No user ID provided, returning empty array');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('gallery_items')
         .select('*')
+        .eq('user_id', userId) // Filter by user ID
         .eq('is_deleted_locally', true)
         .eq('is_permanently_deleted', false)
         .order('deleted_locally_at', { ascending: false });
@@ -50,12 +62,18 @@ export class EnhancedSupabaseService {
     }
   }
 
-  // Get all items for backup restore (including permanently deleted)
-  static async getAllBackupItems(): Promise<BackupGalleryItem[]> {
+  // Get all items for backup restore (including permanently deleted) for specific user
+  static async getAllBackupItems(userId?: string): Promise<BackupGalleryItem[]> {
     try {
+      if (!userId) {
+        console.log('No user ID provided, returning empty array');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('gallery_items')
         .select('*')
+        .eq('user_id', userId) // Filter by user ID
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -100,13 +118,17 @@ export class EnhancedSupabaseService {
   // Soft delete (move to recycle bin)
   static async moveToRecycleBin(itemId: number): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       const { error } = await supabase
         .from('gallery_items')
         .update({
           is_deleted_locally: true,
           deleted_locally_at: new Date().toISOString(),
         })
-        .eq('id', itemId);
+        .eq('id', itemId)
+        .eq('user_id', user.id); // Ensure user can only modify their own items
 
       if (error) throw error;
       return true;
@@ -119,13 +141,17 @@ export class EnhancedSupabaseService {
   // Restore from recycle bin
   static async restoreFromRecycleBin(itemId: number): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       const { error } = await supabase
         .from('gallery_items')
         .update({
           is_deleted_locally: false,
           deleted_locally_at: null,
         })
-        .eq('id', itemId);
+        .eq('id', itemId)
+        .eq('user_id', user.id); // Ensure user can only modify their own items
 
       if (error) throw error;
       return true;
@@ -138,13 +164,17 @@ export class EnhancedSupabaseService {
   // Permanent delete (empty recycle bin)
   static async permanentDelete(itemId: number): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       const { error } = await supabase
         .from('gallery_items')
         .update({
           is_permanently_deleted: true,
           permanently_deleted_at: new Date().toISOString(),
         })
-        .eq('id', itemId);
+        .eq('id', itemId)
+        .eq('user_id', user.id); // Ensure user can only modify their own items
 
       if (error) throw error;
       return true;
@@ -157,6 +187,9 @@ export class EnhancedSupabaseService {
   // Restore from backup (even permanently deleted items)
   static async restoreFromBackup(itemId: number): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       const { error } = await supabase
         .from('gallery_items')
         .update({
@@ -165,7 +198,8 @@ export class EnhancedSupabaseService {
           is_permanently_deleted: false,
           permanently_deleted_at: null,
         })
-        .eq('id', itemId);
+        .eq('id', itemId)
+        .eq('user_id', user.id); // Ensure user can only modify their own items
 
       if (error) throw error;
       return true;
@@ -178,10 +212,14 @@ export class EnhancedSupabaseService {
   // Update caption
   static async updateCaption(itemId: number, caption: string): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       const { error } = await supabase
         .from('gallery_items')
         .update({ caption })
-        .eq('id', itemId);
+        .eq('id', itemId)
+        .eq('user_id', user.id); // Ensure user can only modify their own items
 
       if (error) throw error;
       return true;
