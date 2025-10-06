@@ -94,19 +94,12 @@ const ResponsiveLoginScreen: React.FC = () => {
       console.log('🔵 Starting Google sign-in...');
       console.log('🔵 Platform:', Platform.OS);
       
-      // Create proper redirect URI for the platform
-      const redirectUri = Platform.OS === 'web' 
-        ? window.location.origin 
-        : 'mygallery://auth/callback';
-      
-      console.log('🔵 Redirect URI:', redirectUri);
-      
       // Use the same Supabase OAuth flow for both web and mobile
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUri,
-          skipBrowserRedirect: true, // Important for mobile
+          // Always use the Supabase callback URL - it works for both web and mobile
+          redirectTo: 'https://zjciguygyrnwceymvsfn.supabase.co/auth/v1/callback',
         },
       });
       
