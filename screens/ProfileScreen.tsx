@@ -69,29 +69,10 @@ const ProfileScreen: React.FC = () => {
           text: 'Logout',
           onPress: async () => {
             try {
-              // Sign out with global scope for complete logout
-              const { error } = await supabase.auth.signOut({
-                scope: 'global'
-              });
-              
-              if (error) {
-                throw error;
-              }
-              
-              // Clear web storage if on web
-              if (Platform.OS === 'web') {
-                try {
-                  localStorage.removeItem('supabase.auth.token');
-                  sessionStorage.clear();
-                  setTimeout(() => {
-                    window.location.href = window.location.origin;
-                  }, 200);
-                } catch (storageError) {
-                  console.warn('Storage clear error:', storageError);
-                  window.location.reload();
-                }
-              }
-              // Navigation will automatically handle the redirect for mobile
+              // Simple sign out - app will require fresh login on next visit anyway
+              await supabase.auth.signOut({ scope: 'global' });
+              console.log('Signed out successfully');
+              // Navigation will automatically handle redirect to login
             } catch (error) {
               console.error('Error signing out:', error);
               Alert.alert('Error', 'Failed to sign out');

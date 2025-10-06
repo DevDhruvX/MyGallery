@@ -18,7 +18,6 @@ import Card from '../components/Card';
 import TextField from '../components/TextField';
 import { BorderRadius, Spacing, Typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
-import { useGoogleAuth } from '../services/googleAuth';
 import { supabase } from '../supabaseConfig';
 
 // WebBrowser.maybeCompleteAuthSession() is required for web support
@@ -31,9 +30,6 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('demo@example.com');
   const [password, setPassword] = useState('password123');
   const [isSignUp, setIsSignUp] = useState(false);
-  
-  // Google Auth hook
-  const { signInWithGoogle } = useGoogleAuth();
 
   const handleEmailAuth = async () => {
     try {
@@ -78,19 +74,43 @@ const LoginScreen: React.FC = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      console.log('🔵 Starting Google sign-in...');
+      console.log('🔵 Platform:', Platform.OS);
+      console.log('🔵 Current URL:', Platform.OS === 'web' ? window.location.origin : 'mobile');
       
-      const result = await signInWithGoogle();
-      
-      if (!result.success) {
-        throw new Error(result.error);
+      // Use Supabase's built-in Google OAuth
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
+        },
+      });
+
+      console.log('🔵 Supabase OAuth response:', { data, error });
+
+      if (error) {
+        console.error('🔴 OAuth Error:', error);
+        throw error;
       }
+
+      console.log('🟢 Google sign-in initiated successfully');
+      // For web, this will redirect to Google
+      // For mobile, this will open Google auth in browser
       
-      console.log('Google sign-in successful!');
     } catch (error: any) {
-      console.error('Google Sign-In Error:', error);
+      console.error('🔴 Google Sign-In Error:', error);
+      
+      // More detailed error information
+      console.error('🔴 Error details:', {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        name: error.name
+      });
+      
       Alert.alert(
         'Authentication Error',
-        error.message || 'Failed to sign in with Google. Please try again.',
+        `Failed to sign in with Google: ${error.message || 'Unknown error'}`,
         [{ text: 'OK' }]
       );
     } finally {
@@ -201,7 +221,11 @@ const LoginScreen: React.FC = () => {
                 {/* Google Sign In */}
                 <Button
                   title="Continue with Google"
-                  onPress={handleGoogleSignIn}
+                  onPress={() => {
+                    console.log('🔴 GOOGLE BUTTON CLICKED!');
+                    alert('Google button clicked!'); // Immediate feedback
+                    handleGoogleSignIn();
+                  }}
                   variant="outline"
                   size="lg"
                   fullWidth
@@ -211,6 +235,19 @@ const LoginScreen: React.FC = () => {
                   }
                   style={styles.googleButton}
                 />
+                
+                {/* Test Button */}
+                <TouchableOpacity
+                  onPress={() => alert('Test button works!')}
+                  style={{
+                    backgroundColor: 'red',
+                    padding: 15,
+                    marginTop: 10,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: 'white', textAlign: 'center' }}>Test Button</Text>
+                </TouchableOpacity>
               </View>
               
               <Text style={[styles.privacyText, { color: theme.textSecondary }]}>

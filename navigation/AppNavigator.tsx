@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Session } from '@supabase/supabase-js';
 import React, { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import LoadingScreen from '../components/LoadingScreen';
 import ResponsiveLoginScreen from '../screens/ResponsiveLoginScreen';
 import { supabase } from '../supabaseConfig';
@@ -19,36 +20,41 @@ const AppNavigator: React.FC = () => {
 
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth...');
+        console.log('Initializing auth - forcing fresh login...');
         
-        // Check AsyncStorage directly first
+        // FORCE LOGOUT: Clear any existing sessions/tokens
         const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        const storedSession = await AsyncStorage.default.getItem('supabase.auth.token');
-        console.log('Stored session in AsyncStorage:', storedSession ? 'Found' : 'None');
         
-        // Try to get session with retry logic
-        let attempts = 0;
-        const maxAttempts = 3;
-        let session = null;
+        // Clear all possible auth storage
+        await AsyncStorage.default.removeItem('supabase.auth.token');
+        await AsyncStorage.default.removeItem('supabase.auth.refresh_token');
+        await AsyncStorage.default.removeItem('supabase.auth.session');
         
-        while (attempts < maxAttempts && !session) {
+        // Clear web storage if on web platform
+        if (Platform.OS === 'web') {
           try {
-            const { data, error } = await supabase.auth.getSession();
-            if (error) throw error;
-            session = data.session;
-            if (session) break;
-          } catch (error) {
-            console.log(`Session attempt ${attempts + 1} failed:`, error);
-          }
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between attempts
+            if (typeof localStorage !== 'undefined') {
+              localStorage.removeItem('supabase.auth.token');
+              localStorage.removeItem('sb-zjciguygyrnwceymvsfn-auth-token');
+            }
+            if (typeof sessionStorage !== 'undefined') {
+              sessionStorage.clear();
+            }
+          } catch (e) {
+            console.log('Web storage clear error:', e);
           }
         }
         
+        // Force sign out from Supabase to ensure clean state
+        try {
+          await supabase.auth.signOut({ scope: 'global' });
+        } catch (signOutError) {
+          console.log('Sign out error (expected):', signOutError);
+        }
+        
         if (mounted) {
-          console.log('Final session result:', session ? 'Found' : 'None');
-          setSession(session);
+          console.log('Forced logout complete - requiring fresh login');
+          setSession(null);
           setIsLoading(false);
         }
       } catch (error) {
@@ -60,25 +66,24 @@ const AppNavigator: React.FC = () => {
       }
     };
 
-    // Reduce fallback timeout since we have retry logic
+    // Shorter timeout since we're not checking for existing sessions
     const forceTimeout = setTimeout(() => {
       if (mounted) {
-        console.log('FORCE TIMEOUT - Setting loading to false');
+        console.log('FORCE TIMEOUT - Showing login screen');
+        setSession(null);
         setIsLoading(false);
-        // Don't override session if we already have one
       }
-    }, 8000); // Increased to 8 seconds to account for retry logic
+    }, 2000); // Reduced to 2 seconds
 
     initializeAuth();
 
-    // Listen for auth changes with better error handling
+    // Listen for auth changes (only for new logins)
     try {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
+        console.log('Auth state changed:', event, session ? 'New session created' : 'Session cleared');
         if (mounted) {
           setSession(session);
           setIsLoading(false);
-          // Clear force timeout when we get a definitive auth state
           clearTimeout(forceTimeout);
         }
       });

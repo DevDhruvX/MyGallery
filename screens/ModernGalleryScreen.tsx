@@ -637,35 +637,13 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
               setGalleryItems([]);
               setUser(null);
               
-              // Sign out from Supabase with proper options for web
-              const { error } = await supabase.auth.signOut({
-                scope: 'global' // This ensures complete logout including from Google
-              });
+              // Simple sign out - app requires fresh login anyway
+              await supabase.auth.signOut({ scope: 'global' });
               
-              if (error) {
-                console.error('Logout error:', error);
-                throw error;
-              }
+              console.log('Logout successful - will require fresh login on next visit');
               
-              console.log('Logout successful');
-              
-              // For web, clear session storage and local storage
-              if (Platform.OS === 'web') {
-                try {
-                  // Clear Supabase session from storage
-                  localStorage.removeItem('supabase.auth.token');
-                  sessionStorage.clear();
-                  
-                  // Small delay to ensure state is cleared, then reload
-                  setTimeout(() => {
-                    window.location.href = window.location.origin;
-                  }, 200);
-                } catch (storageError) {
-                  console.warn('Storage clear error:', storageError);
-                  // Fallback to simple reload
-                  window.location.reload();
-                }
-              } else {
+              // Show success message for mobile
+              if (Platform.OS !== 'web') {
                 Alert.alert('✅ Success', 'You have been logged out successfully');
               }
             } catch (error) {

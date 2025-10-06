@@ -91,21 +91,71 @@ const ResponsiveLoginScreen: React.FC = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      console.log('🔵 Starting Google sign-in...');
+      console.log('🔵 Platform:', Platform.OS);
+      
+      // Different handling for web vs mobile
+      if (Platform.OS === 'web') {
+        // For web, use direct OAuth with window redirect
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        });
+        
+        if (error) throw error;
+        console.log('� Web Google sign-in initiated');
+      } else {
+        // For mobile, use OAuth with deep link redirect
+        const redirectUrl = 'mygallery://auth/callback'; // Deep link back to your app
+        
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: redirectUrl,
+          },
+        });
+
+        if (error) throw error;
+
+        console.log('� Opening OAuth URL in mobile browser:', data.url);
+        
+        // Open the OAuth URL in browser with proper redirect handling
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl, // This tells the browser to redirect back to your app
+          {
+            showInRecents: false,
+          }
+        );
+        
+        console.log('🔵 WebBrowser result:', result);
+        
+        if (result.type === 'success') {
+          console.log('🟢 Mobile Google auth completed successfully');
+          // The auth state listener will handle the session update
+        } else if (result.type === 'cancel') {
+          console.log('🟡 User cancelled Google auth');
+        }
+      }
+      
+    } catch (error: any) {
+      console.error('🔴 Google Sign-In Error:', error);
+      
+      // More detailed error information
+      console.error('🔴 Error details:', {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        name: error.name
+      });
       
       Alert.alert(
-        '🔧 Google OAuth Setup',
-        'To enable Google OAuth, you need to:\\n\\n1. Create a Google Cloud Project\\n2. Configure OAuth credentials\\n3. Add your client IDs to the app\\n\\nFor now, use email/password authentication!',
-        [
-          { 
-            text: 'Setup Guide', 
-            onPress: () => WebBrowser.openBrowserAsync('https://docs.expo.dev/guides/authentication/#google') 
-          },
-          { text: 'OK' }
-        ]
+        'Authentication Error',
+        `Failed to sign in with Google: ${error.message || 'Unknown error'}`,
+        [{ text: 'OK' }]
       );
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      Alert.alert('❌ Error', 'Failed to sign in with Google');
     } finally {
       setIsLoading(false);
     }
