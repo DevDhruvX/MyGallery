@@ -3,14 +3,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Image,
-  Platform,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    Platform,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/Button';
@@ -18,6 +18,7 @@ import Card from '../components/Card';
 import TextField from '../components/TextField';
 import { BorderRadius, Spacing, Typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
+import { useGoogleAuth } from '../services/googleAuth';
 import { supabase } from '../supabaseConfig';
 
 // WebBrowser.maybeCompleteAuthSession() is required for web support
@@ -30,6 +31,9 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('demo@example.com');
   const [password, setPassword] = useState('password123');
   const [isSignUp, setIsSignUp] = useState(false);
+  
+  // Google Auth hook
+  const { signInWithGoogle } = useGoogleAuth();
 
   const handleEmailAuth = async () => {
     try {
@@ -74,20 +78,14 @@ const LoginScreen: React.FC = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
-        },
-      });
-
-      if (error) {
-        throw error;
+      
+      const result = await signInWithGoogle();
+      
+      if (!result.success) {
+        throw new Error(result.error);
       }
-
-      // For web, the redirect will handle the auth flow
-      // For mobile, we'll handle this in the auth state listener
+      
+      console.log('Google sign-in successful!');
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
       Alert.alert(

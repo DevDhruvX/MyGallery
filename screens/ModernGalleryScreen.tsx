@@ -5,19 +5,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  Modal,
-  Platform,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Animated,
+    Dimensions,
+    FlatList,
+    Image,
+    Modal,
+    Platform,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CreateFolderModal from '../components/CreateFolderModal';
@@ -637,8 +637,10 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
               setGalleryItems([]);
               setUser(null);
               
-              // Sign out from Supabase
-              const { error } = await supabase.auth.signOut();
+              // Sign out from Supabase with proper options for web
+              const { error } = await supabase.auth.signOut({
+                scope: 'global' // This ensures complete logout including from Google
+              });
               
               if (error) {
                 console.error('Logout error:', error);
@@ -647,12 +649,22 @@ const ModernGalleryScreen: React.FC<ModernGalleryScreenProps> = ({ route }) => {
               
               console.log('Logout successful');
               
-              // For web, we might need to reload the page to ensure clean state
+              // For web, clear session storage and local storage
               if (Platform.OS === 'web') {
-                // Small delay to ensure state is cleared
-                setTimeout(() => {
+                try {
+                  // Clear Supabase session from storage
+                  localStorage.removeItem('supabase.auth.token');
+                  sessionStorage.clear();
+                  
+                  // Small delay to ensure state is cleared, then reload
+                  setTimeout(() => {
+                    window.location.href = window.location.origin;
+                  }, 200);
+                } catch (storageError) {
+                  console.warn('Storage clear error:', storageError);
+                  // Fallback to simple reload
                   window.location.reload();
-                }, 100);
+                }
               } else {
                 Alert.alert('✅ Success', 'You have been logged out successfully');
               }

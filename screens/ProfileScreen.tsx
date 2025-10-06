@@ -3,16 +3,16 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  Image,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    Image,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackupSyncModal from '../components/BackupSyncModal';
@@ -69,8 +69,29 @@ const ProfileScreen: React.FC = () => {
           text: 'Logout',
           onPress: async () => {
             try {
-              await supabase.auth.signOut();
-              // Navigation will automatically handle the redirect
+              // Sign out with global scope for complete logout
+              const { error } = await supabase.auth.signOut({
+                scope: 'global'
+              });
+              
+              if (error) {
+                throw error;
+              }
+              
+              // Clear web storage if on web
+              if (Platform.OS === 'web') {
+                try {
+                  localStorage.removeItem('supabase.auth.token');
+                  sessionStorage.clear();
+                  setTimeout(() => {
+                    window.location.href = window.location.origin;
+                  }, 200);
+                } catch (storageError) {
+                  console.warn('Storage clear error:', storageError);
+                  window.location.reload();
+                }
+              }
+              // Navigation will automatically handle the redirect for mobile
             } catch (error) {
               console.error('Error signing out:', error);
               Alert.alert('Error', 'Failed to sign out');
