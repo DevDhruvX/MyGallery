@@ -4,15 +4,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
@@ -94,17 +94,12 @@ const ResponsiveLoginScreen: React.FC = () => {
       console.log('🔵 Starting Google sign-in...');
       console.log('🔵 Platform:', Platform.OS);
       
-      // Use Supabase OAuth for both web and mobile
+      // Use the same Supabase OAuth flow for both web and mobile
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: Platform.OS === 'web' ? window.location.origin : 'mygallery://auth/callback',
-          // Add iOS client ID for mobile platforms
-          ...(Platform.OS !== 'web' && {
-            queryParams: {
-              client_id: '535984161025-jt47te55f4cb58b95jb8v1ovhfl6in2i.apps.googleusercontent.com'
-            }
-          })
+          // Always use the Supabase callback URL - it works for both web and mobile
+          redirectTo: 'https://zjciguygyrnwceymvsfn.supabase.co/auth/v1/callback',
         },
       });
       
@@ -113,38 +108,42 @@ const ResponsiveLoginScreen: React.FC = () => {
         throw error;
       }
       
-      console.log('🔵 OAuth response:', data);
+      console.log('� OAuth response:', data);
+      console.log('🔵 Opening OAuth URL:', data.url);
       
       if (Platform.OS === 'web') {
         console.log('🟢 Web Google sign-in initiated - redirecting...');
         // Web will redirect automatically
       } else {
-        console.log('🔵 Opening OAuth URL in mobile browser:', data.url);
-        
-        // For mobile, open in browser and let Supabase handle the rest
+        // For mobile, open the OAuth URL in browser
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
-          'mygallery://auth/callback',  // Proper mobile redirect
+          // Don't specify a redirect - let the browser handle the Supabase callback
+          undefined,
           {
             showInRecents: true,
+            // This helps with the redirect back to the app
+            createTask: false,
           }
         );
         
-        console.log('🔵 Mobile auth result:', result);
+        console.log('� Mobile auth result:', result);
         
-        if (result.type === 'success') {
-          console.log('🟢 Mobile Google auth completed - checking session...');
+        // For mobile, the auth might complete even if result.type is 'cancel'
+        // because the OAuth completes in the browser and then the app is notified
+        if (result.type === 'success' || result.type === 'cancel') {
+          console.log('🔵 Checking for session after mobile auth...');
           
-          // Check for session after auth
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData.session) {
-            console.log('✅ Session found after mobile auth!');
-          } else {
-            console.log('⏳ No session yet - waiting for auth state change...');
-          }
-        } else if (result.type === 'cancel') {
-          console.log('❌ User cancelled Google auth');
-          return;
+          // Wait a bit for the auth to complete
+          setTimeout(async () => {
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+            if (sessionData.session) {
+              console.log('✅ Session found after mobile auth!');
+              // Session will be picked up by the auth state listener
+            } else {
+              console.log('⏳ No session yet - auth may still be processing...');
+            }
+          }, 1500);
         }
       }
       

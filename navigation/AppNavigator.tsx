@@ -2,7 +2,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Session } from '@supabase/supabase-js';
 import React, { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
 import LoadingScreen from '../components/LoadingScreen';
 import ResponsiveLoginScreen from '../screens/ResponsiveLoginScreen';
 import { supabase } from '../supabaseConfig';
