@@ -52,7 +52,7 @@ AND is_permanently_deleted = false;
 SELECT * FROM storage.buckets WHERE id = 'gallery-images';
 
 -- Check storage policies
-SELECT policyname, definition 
+SELECT policyname, cmd, qual 
 FROM pg_policies 
 WHERE tablename = 'objects' 
 AND policyname LIKE '%gallery%';
