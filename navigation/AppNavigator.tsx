@@ -20,41 +20,14 @@ const AppNavigator: React.FC = () => {
 
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth - forcing fresh login...');
+        console.log('Initializing auth - checking for existing session...');
         
-        // FORCE LOGOUT: Clear any existing sessions/tokens
-        const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        
-        // Clear all possible auth storage
-        await AsyncStorage.default.removeItem('supabase.auth.token');
-        await AsyncStorage.default.removeItem('supabase.auth.refresh_token');
-        await AsyncStorage.default.removeItem('supabase.auth.session');
-        
-        // Clear web storage if on web platform
-        if (Platform.OS === 'web') {
-          try {
-            if (typeof localStorage !== 'undefined') {
-              localStorage.removeItem('supabase.auth.token');
-              localStorage.removeItem('sb-zjciguygyrnwceymvsfn-auth-token');
-            }
-            if (typeof sessionStorage !== 'undefined') {
-              sessionStorage.clear();
-            }
-          } catch (e) {
-            console.log('Web storage clear error:', e);
-          }
-        }
-        
-        // Force sign out from Supabase to ensure clean state
-        try {
-          await supabase.auth.signOut({ scope: 'global' });
-        } catch (signOutError) {
-          console.log('Sign out error (expected):', signOutError);
-        }
+        // Try to get existing session first
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (mounted) {
-          console.log('Forced logout complete - requiring fresh login');
-          setSession(null);
+          console.log('Session check result:', session ? 'Found existing session' : 'No session');
+          setSession(session);
           setIsLoading(false);
         }
       } catch (error) {
@@ -66,21 +39,21 @@ const AppNavigator: React.FC = () => {
       }
     };
 
-    // Shorter timeout since we're not checking for existing sessions
+    // Timeout for auth initialization
     const forceTimeout = setTimeout(() => {
       if (mounted) {
-        console.log('FORCE TIMEOUT - Showing login screen');
+        console.log('Auth timeout - showing login screen');
         setSession(null);
         setIsLoading(false);
       }
-    }, 2000); // Reduced to 2 seconds
+    }, 3000);
 
     initializeAuth();
 
-    // Listen for auth changes (only for new logins)
+    // Listen for auth changes
     try {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event, session ? 'New session created' : 'Session cleared');
+        console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
         if (mounted) {
           setSession(session);
           setIsLoading(false);

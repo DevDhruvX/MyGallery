@@ -94,63 +94,56 @@ const ResponsiveLoginScreen: React.FC = () => {
       console.log('🔵 Starting Google sign-in...');
       console.log('🔵 Platform:', Platform.OS);
       
-      // Different handling for web vs mobile
+      // Use Supabase OAuth for both web and mobile
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
+        },
+      });
+      
+      if (error) {
+        console.error('🔴 OAuth Error:', error);
+        throw error;
+      }
+      
+      console.log('🔵 OAuth response:', data);
+      
       if (Platform.OS === 'web') {
-        // For web, use direct OAuth with window redirect
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
-          },
-        });
-        
-        if (error) throw error;
-        console.log('� Web Google sign-in initiated');
+        console.log('🟢 Web Google sign-in initiated - redirecting...');
+        // Web will redirect automatically
       } else {
-        // For mobile, use OAuth with deep link redirect
-        const redirectUrl = 'mygallery://auth/callback'; // Deep link back to your app
+        console.log('🔵 Opening OAuth URL in mobile browser:', data.url);
         
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-          },
-        });
-
-        if (error) throw error;
-
-        console.log('� Opening OAuth URL in mobile browser:', data.url);
-        
-        // Open the OAuth URL in browser with proper redirect handling
+        // For mobile, open in browser and let Supabase handle the rest
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
-          redirectUrl, // This tells the browser to redirect back to your app
+          'mygallery://',  // Simple scheme redirect
           {
-            showInRecents: false,
+            showInRecents: true,
           }
         );
         
-        console.log('🔵 WebBrowser result:', result);
+        console.log('🔵 Mobile auth result:', result);
         
         if (result.type === 'success') {
-          console.log('🟢 Mobile Google auth completed successfully');
-          // The auth state listener will handle the session update
+          console.log('🟢 Mobile Google auth completed - checking session...');
+          
+          // Check for session after auth
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData.session) {
+            console.log('� Session found after mobile auth!');
+          } else {
+            console.log('� No session yet - waiting for auth state change...');
+          }
         } else if (result.type === 'cancel') {
-          console.log('🟡 User cancelled Google auth');
+          console.log('� User cancelled Google auth');
+          return;
         }
       }
       
     } catch (error: any) {
       console.error('🔴 Google Sign-In Error:', error);
-      
-      // More detailed error information
-      console.error('🔴 Error details:', {
-        message: error.message,
-        status: error.status,
-        statusText: error.statusText,
-        name: error.name
-      });
-      
       Alert.alert(
         'Authentication Error',
         `Failed to sign in with Google: ${error.message || 'Unknown error'}`,
