@@ -42,10 +42,10 @@ const ResponsiveLoginScreen: React.FC = () => {
 
   // Google OAuth configuration
   const googleAuthConfig = {
-    expoClientId: 'YOUR_EXPO_CLIENT_ID',
-    iosClientId: 'YOUR_IOS_CLIENT_ID',
-    androidClientId: 'YOUR_ANDROID_CLIENT_ID',
-    webClientId: 'YOUR_WEB_CLIENT_ID',
+    expoClientId: '535984161025-jt47te55f4cb58b95jb8v1ovhfl6in2i.apps.googleusercontent.com', // iOS client
+    iosClientId: '535984161025-jt47te55f4cb58b95jb8v1ovhfl6in2i.apps.googleusercontent.com', // iOS client
+    androidClientId: '535984161025-jt47te55f4cb58b95jb8v1ovhfl6in2i.apps.googleusercontent.com', // Use iOS client for Android too
+    webClientId: '535984161025-0djfrcgn7bkvvbao7b46pr7vmbfk962e.apps.googleusercontent.com', // Original web client
   };
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -99,6 +99,12 @@ const ResponsiveLoginScreen: React.FC = () => {
         provider: 'google',
         options: {
           redirectTo: Platform.OS === 'web' ? window.location.origin : 'mygallery://auth/callback',
+          // Add iOS client ID for mobile platforms
+          ...(Platform.OS !== 'web' && {
+            queryParams: {
+              client_id: '535984161025-jt47te55f4cb58b95jb8v1ovhfl6in2i.apps.googleusercontent.com'
+            }
+          })
         },
       });
       
@@ -132,12 +138,12 @@ const ResponsiveLoginScreen: React.FC = () => {
           // Check for session after auth
           const { data: sessionData } = await supabase.auth.getSession();
           if (sessionData.session) {
-            console.log('� Session found after mobile auth!');
+            console.log('✅ Session found after mobile auth!');
           } else {
-            console.log('� No session yet - waiting for auth state change...');
+            console.log('⏳ No session yet - waiting for auth state change...');
           }
         } else if (result.type === 'cancel') {
-          console.log('� User cancelled Google auth');
+          console.log('❌ User cancelled Google auth');
           return;
         }
       }
