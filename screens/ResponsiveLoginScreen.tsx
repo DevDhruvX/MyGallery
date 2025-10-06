@@ -98,7 +98,7 @@ const ResponsiveLoginScreen: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
+          redirectTo: Platform.OS === 'web' ? window.location.origin : 'mygallery://auth/callback',
         },
       });
       
@@ -118,7 +118,7 @@ const ResponsiveLoginScreen: React.FC = () => {
         // For mobile, open in browser and let Supabase handle the rest
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
-          'mygallery://',  // Simple scheme redirect
+          'mygallery://auth/callback',  // Proper mobile redirect
           {
             showInRecents: true,
           }
